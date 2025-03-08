@@ -36,7 +36,10 @@ const Home = async () => {
             className="mx-auto"
           />
 
-          <AddDocumentBtn />
+          <AddDocumentBtn
+            userId={clerkUser?.id}
+            email={clerkUser.emailAddresses[0].emailAddress}
+          />
 
         </div>
       )}
