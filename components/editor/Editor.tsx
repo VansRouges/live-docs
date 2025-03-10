@@ -10,7 +10,7 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import React from 'react';
-import { FloatingComposer, FloatingThreads, liveblocksConfig, LiveblocksPlugin, useEditorStatus, useIsEditorReady } from '@liveblocks/react-lexical';
+import { FloatingComposer, FloatingThreads, liveblocksConfig, LiveblocksPlugin, useIsEditorReady } from '@liveblocks/react-lexical';
 import Loader from '../Loader';
 import FloatingToolbar from './plugins/FloatingToolBarPlugin';
 import { useThreads } from '@liveblocks/react/suspense';
@@ -49,23 +49,27 @@ export function Editor({ roomId, currentUserType }: { roomId: string; currentUse
         </div>
 
         <div className='editor-wrapper flex flex-col items-center justify-start'>
-          {status ? <Loader /> : (
-            <div>
-              <div className="editor-inner min-h-[1100px] relative mb-5 h-fit w-full max-w-[800px]
-               shadow-md lg:mb-10">
-                <RichTextPlugin
-                  contentEditable={
-                    <ContentEditable className="editor-input h-full" />
-                  }
-                  placeholder={<Placeholder />}
-                  ErrorBoundary={LexicalErrorBoundary}
-                />
-                {currentUserType === "editor" && <FloatingToolbar />}
-                <HistoryPlugin />
-                <AutoFocusPlugin />
-              </div>
-            </div>
-          )}
+          {status ? (
+              <>
+                <div className="editor-inner min-h-[1100px] relative mb-5 h-fit w-full max-w-[800px] shadow-md lg:mb-10">
+                  <RichTextPlugin
+                    contentEditable={<ContentEditable className="editor-input h-full" />}
+                    placeholder={<Placeholder />}
+                    ErrorBoundary={LexicalErrorBoundary}
+                  />
+                  {currentUserType === "editor" && <FloatingToolbar />}
+                  <HistoryPlugin />
+                  <AutoFocusPlugin />
+                </div>
+
+                <LiveblocksPlugin>
+                  <FloatingComposer className="w-[350px]" />
+                  <FloatingThreads threads={threads} />
+                  <Comments />
+                </LiveblocksPlugin>
+              </>
+            ) : <Loader />
+          }
 
           <LiveblocksPlugin>
              <FloatingComposer className='w-[350px]' />
