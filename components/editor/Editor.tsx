@@ -10,7 +10,7 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import React from 'react';
-import { FloatingComposer, FloatingThreads, liveblocksConfig, LiveblocksPlugin, useEditorStatus } from '@liveblocks/react-lexical';
+import { FloatingComposer, FloatingThreads, liveblocksConfig, LiveblocksPlugin, useEditorStatus, useIsEditorReady } from '@liveblocks/react-lexical';
 import Loader from '../Loader';
 import FloatingToolbar from './plugins/FloatingToolBarPlugin';
 import { useThreads } from '@liveblocks/react/suspense';
@@ -25,7 +25,8 @@ function Placeholder() {
 }
 
 export function Editor({ roomId, currentUserType }: { roomId: string; currentUserType: UserType }) {
-  const status = useEditorStatus();
+  const status = useIsEditorReady();
+  console.log("Editor Status:", status);
   const { threads } = useThreads();
 
   const initialConfig = liveblocksConfig({
@@ -48,7 +49,7 @@ export function Editor({ roomId, currentUserType }: { roomId: string; currentUse
         </div>
 
         <div className='editor-wrapper flex flex-col items-center justify-start'>
-          {status === "not-loaded" || status === "loading" ? <Loader /> : (
+          {status ? <Loader /> : (
             <div>
               <div className="editor-inner min-h-[1100px] relative mb-5 h-fit w-full max-w-[800px]
                shadow-md lg:mb-10">
