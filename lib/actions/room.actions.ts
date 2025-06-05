@@ -47,7 +47,7 @@ export const createDocument = async ({ userId, email }: CreateDocumentParams) =>
 export const getDocument = async ({ roomId, userId }: { roomId: string; userId: string }) => {
   try {
     // First check Permit permissions
-    const canView = await verifyUserPermission(userId, 'view');
+    const canView = await verifyUserPermission(userId, 'read');
     if (!canView) {
       throw new Error('You do not have permission to view this document');
     }
@@ -168,7 +168,7 @@ export const deleteDocument = async (roomId: string) => {
 }
 
 // Update the verifyUserPermission function
-export const verifyUserPermission = async (email: string, requiredAction: 'edit' | 'view'): Promise<boolean> => {
+export const verifyUserPermission = async (email: string, requiredAction: 'edit' | 'read'): Promise<boolean> => {
   try {
     const hasPermission = await checkUserPermission(email, requiredAction);
     if (!hasPermission) {

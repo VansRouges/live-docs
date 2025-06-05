@@ -12,9 +12,9 @@ const Document = async ({ params: { id } }: SearchParamProps) => {
 
   try {
     // Check basic view permission first
-    const canView = await verifyUserPermission(userEmail, 'view');
+    const canView = await verifyUserPermission(userEmail, 'read');
     if (!canView) {
-      redirect('/unauthorized');
+      redirect('/');
     }
 
     const room = await getDocument({
