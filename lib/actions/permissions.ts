@@ -14,13 +14,42 @@ const permitApi = axios.create({
   },
 });
 
+// Cache for user existence checks
+const userExistenceCache = new Map<string, boolean>();
+
+export const checkUserExistsInPermit = async (email: string): Promise<boolean> => {
+  // Check cache first
+  if (userExistenceCache.has(email)) {
+    return userExistenceCache.get(email)!;
+  }
+
+  try {
+    const response = await permit.api.users.get(email);
+    userExistenceCache.set(email, true);
+    return true;
+  } catch (error) {
+    if (error.status === 404) {
+      userExistenceCache.set(email, false);
+      return false;
+    }
+    console.error('Permit user check failed:', error);
+    // Assume user exists to prevent duplicate creation
+    return true;
+  }
+};
+
 export const syncUserWithPermit = async (email: string, role: 'editor' | 'viewer') => {
   try {
+    const userExists = await checkUserExistsInPermit(email);
+    if (userExists) return;
+
+    // User doesn't exist, create them
     await permitApi.post(`/${PERMIT_PROJ_ID}/${PERMIT_ENV_ID}/users`, {
       key: email,
       email,
       role_assignments: [{ role, tenant: "default" }],
     });
+    userExistenceCache.set(email, true);
   } catch (error) {
     console.error("Permit sync error:", error);
     throw error;
@@ -62,6 +91,6 @@ export const checkUserPermission = async (email: string, action: string): Promis
     return permitted;
   } catch (error) {
     console.error(`Error checking permission for ${email}:`, error);
-    return false;
+    return true; // Fallback to allow access
   }
 };

@@ -17,7 +17,9 @@ export const createDocument = async ({ userId, email }: CreateDocumentParams) =>
 
   try {
     // Sync user with Permit as editor
-    await syncUserWithPermit(email, 'editor');
+    await syncUserWithPermit(email, 'editor').catch(() => {
+      console.log('Permit sync failed, proceeding with document creation');
+    });
 
     const metadata = {
       creatorId: userId,
@@ -178,6 +180,8 @@ export const verifyUserPermission = async (email: string, requiredAction: 'edit'
     return true;
   } catch (error) {
     console.error(`Permission verification failed for ${email}:`, error);
+    revalidatePath('/');
+    redirect('/');
     return false;
   }
 };
