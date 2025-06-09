@@ -38,7 +38,7 @@ export const checkUserExistsInPermit = async (email: string): Promise<boolean> =
   }
 };
 
-export const syncUserWithPermit = async (email: string, role: 'editor' | 'viewer') => {
+export const syncUserWithPermit = async (email: string, role: 'editor' | 'viewer' | 'creator') => {
   try {
     const userExists = await checkUserExistsInPermit(email);
     if (userExists) return;
