@@ -56,7 +56,7 @@ export const syncUserWithPermit = async (email: string, role: 'editor' | 'viewer
   }
 };
 
-export const assignRoleWithPermit = async (email: string, role: 'editor' | 'viewer') => {
+export const assignRoleWithPermit = async (email: string, role: 'editor' | 'viewer' | 'creator') => {
   try {
     // First check if user exists as a fallback
     const userExists = await checkUserExistsInPermit(email);
