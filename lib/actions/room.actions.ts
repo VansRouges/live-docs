@@ -91,10 +91,10 @@ export const getDocuments = async (email: string ) => {
 export const updateDocumentAccess = async ({ roomId, email, userType, updatedBy }: ShareDocumentParams) => {
   try {
     // Verify current user has permission to edit
-    const canEdit = await verifyUserPermission(updatedBy.email, 'edit');
-    if (!canEdit) {
-      throw new Error('You do not have permission to modify access');
-    }
+    // const canEdit = await verifyUserPermission(updatedBy.email, 'edit');
+    // if (!canEdit) {
+    //   throw new Error('You do not have permission to modify access');
+    // }
 
     // Convert 'viewer'/'editor' to Permit actions
     // const permitRole = userType === 'editor' ? 'editor' : 'viewer';
