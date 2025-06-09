@@ -17,7 +17,7 @@ import { Input } from "./ui/input";
 import UserTypeSelector from "./UserTypeSelector";
 import Collaborator from "./Collaborator";
 import { updateDocumentAccess } from "@/lib/actions/room.actions";
-import { assignRoleWithPermit } from "@/lib/actions/permissions";
+// import { assignRoleWithPermit } from "@/lib/actions/permissions";
 import { toast } from "sonner"
 
 const ShareModal = ({ roomId, collaborators, creatorId, currentUserType }: ShareDocumentDialogProps) => {
@@ -66,16 +66,39 @@ const ShareModal = ({ roomId, collaborators, creatorId, currentUserType }: Share
 
   const shareDocumentHandler = async () => {
     setLoading(true);
-
-    await updateDocumentAccess({ 
-      roomId, 
-      email, 
-      userType: userType as UserType, 
-      updatedBy: user.info,
-    });
-
-    setLoading(false);
+    try {
+      const result = await updateDocumentAccess({ 
+        roomId, 
+        email, 
+        userType, 
+        updatedBy: user.info,
+      });
+      
+      toast.success('Access updated successfully');
+      // setEmail('');
+      // setUserType('viewer');
+      setRoleAssigned(false);
+      // setOpen(false);
+    } catch (error) {
+      console.error('Error sharing document:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update access');
+    } finally {
+      setLoading(false);
+    }
   }
+
+  // const shareDocumentHandler = async () => {Add commentMore actions
+  //   setLoading(true);
+
+  //   await updateDocumentAccess({ 
+  //     roomId, 
+  //     email, 
+  //     userType: userType as UserType, 
+  //     updatedBy: user.info,
+  //   });
+
+  //   setLoading(false);
+  // }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -91,14 +91,10 @@ export const getDocuments = async (email: string ) => {
 export const updateDocumentAccess = async ({ roomId, email, userType, updatedBy }: ShareDocumentParams) => {
   try {
     // Verify current user has permission to edit
-    // const canEdit = await verifyUserPermission(updatedBy.email, 'edit');
-    // if (!canEdit) {
-    //   throw new Error('You do not have permission to modify access');
-    // }
-
-    // Convert 'viewer'/'editor' to Permit actions
-    // const permitRole = userType === 'editor' ? 'editor' : 'viewer';
-    // await assignRoleWithPermit(email, permitRole);
+    const canEdit = await verifyUserPermission(updatedBy.email, 'edit');
+    if (!canEdit) {
+      throw new Error('You do not have permission to modify access');
+    }
 
     const usersAccesses: RoomAccesses = {
       [email]: getAccessType(userType) as AccessType,
@@ -129,7 +125,7 @@ export const updateDocumentAccess = async ({ roomId, email, userType, updatedBy 
     return parseStringify(room);
   } catch (error) {
     console.error(`Error updating document access:`, error);
-    throw error;
+    throw error; // Let the UI component handle the error display
   }
 }
 
@@ -180,8 +176,7 @@ export const verifyUserPermission = async (email: string, requiredAction: 'edit'
     return true;
   } catch (error) {
     console.error(`Permission verification failed for ${email}:`, error);
-    revalidatePath('/');
-    redirect('/');
+    // Remove the redirect here - let the calling function handle it
     return false;
   }
 };
