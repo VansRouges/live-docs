@@ -30,8 +30,6 @@ export async function POST(request: Request) {
   const permitPayload = {
     key: email,
     email,
-    first_name: firstName,
-    last_name: lastName,
     role_assignments: [{ role, tenant: "default" }],
   };
 
@@ -39,30 +37,52 @@ export async function POST(request: Request) {
     // First check if user exists
     try {
       await axios.get(`${PERMIT_API_URL}/${email}`, { headers: PERMIT_AUTH_HEADER });
-      // If we get here, user exists - return error suggesting to use PUT
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: "User already exists. Use PUT /api/permit-update to update the user.",
-          error: "DUPLICATE_ENTITY" 
-        },
-        { status: 409 }
-      );
+      
+      // User exists - call role-assign endpoint on same domain
+      try {
+        const requestUrl = new URL(request.url);
+        const roleAssignUrl = `${requestUrl.origin}/api/permit/role-assign`;
+        
+        const roleAssignResponse = await axios.post(
+          roleAssignUrl,
+          {
+            userId: email,
+            role
+          }
+        );
+
+        return NextResponse.json({
+          message: "Role assigned to existing user successfully",
+          data: roleAssignResponse.data,
+        }, { status: 200 });
+        
+      } catch (roleAssignError) {
+        console.error("Failed to assign role to existing user:", roleAssignError);
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: "User exists but failed to assign role",
+            error: axios.isAxiosError(roleAssignError) ? roleAssignError.response?.data : roleAssignError 
+          },
+          { status: 500 }
+        );
+      }
+
     } catch (getError) {
       // User doesn't exist - proceed with creation
       if (!axios.isAxiosError(getError) || getError.response?.status !== 404) {
         throw getError; // Re-throw if it's not a 404 error
       }
+
+      // Create new user
+      const response = await axios.post(PERMIT_API_URL, permitPayload, { headers: PERMIT_AUTH_HEADER });
+      const permitResponse = response.data;
+
+      return NextResponse.json({
+        message: "User created successfully",
+        permit: permitResponse,
+      }, { status: 201 });
     }
-
-    // Create new user
-    const response = await axios.post(PERMIT_API_URL, permitPayload, { headers: PERMIT_AUTH_HEADER });
-    const permitResponse = response.data;
-
-    return NextResponse.json({
-      message: "User created successfully",
-      permit: permitResponse,
-    }, { status: 201 });
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error("Failed to sync user to Permit.io:", error.response?.data || error.message);

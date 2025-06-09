@@ -38,7 +38,22 @@ const ShareModal = ({ roomId, collaborators, creatorId, currentUserType }: Share
 
     setAssigningRole(true);
     try {
-      await assignRoleWithPermit(email, userType);
+      const response = await fetch('/api/permit/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: email,
+          role: userType,
+          email,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to assign role');
+      }
+
       toast.success(`Role assigned successfully`);
       setRoleAssigned(true);
     } catch (error) {
@@ -51,25 +66,16 @@ const ShareModal = ({ roomId, collaborators, creatorId, currentUserType }: Share
 
   const shareDocumentHandler = async () => {
     setLoading(true);
-    try {
-      await updateDocumentAccess({ 
-        roomId, 
-        email, 
-        userType, 
-        updatedBy: user.info,
-      });
-      toast.success('Document shared successfully');
-      setEmail('');
-      setUserType('viewer');
-      setRoleAssigned(false);
-      setOpen(false);
-    } catch (error) {
-      console.error('Error sharing document:', error);
-      toast.error('Failed to share document');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    await updateDocumentAccess({ 
+      roomId, 
+      email, 
+      userType: userType as UserType, 
+      updatedBy: user.info,
+    });
+
+    setLoading(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

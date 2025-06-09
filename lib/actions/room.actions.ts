@@ -97,8 +97,8 @@ export const updateDocumentAccess = async ({ roomId, email, userType, updatedBy 
     }
 
     // Convert 'viewer'/'editor' to Permit actions
-    const permitRole = userType === 'editor' ? 'editor' : 'viewer';
-    await assignRoleWithPermit(email, permitRole);
+    // const permitRole = userType === 'editor' ? 'editor' : 'viewer';
+    // await assignRoleWithPermit(email, permitRole);
 
     const usersAccesses: RoomAccesses = {
       [email]: getAccessType(userType) as AccessType,
