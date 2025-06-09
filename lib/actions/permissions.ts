@@ -56,17 +56,51 @@ export const syncUserWithPermit = async (email: string, role: 'editor' | 'viewer
   }
 };
 
-export const assignRoleWithPermit = async (email: string, role: 'editor' | 'viewer') => {
+export const assignRoleWithPermit = async (email: string, role: 'editor' | 'viewer' | 'creator') => {
   try {
+    // First check if user exists as a fallback
+    const userExists = await checkUserExistsInPermit(email);
+    if (!userExists) {
+      console.log(`User ${email} not found, attempting to sync first...`);
+      await syncUserWithPermit(email, role);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+    // Assign the role
     await permitApi.post(`/${PERMIT_PROJ_ID}/${PERMIT_ENV_ID}/users/${email}/roles`, {
       role,
       tenant: "default"
     });
+    console.log(`Successfully assigned ${role} role to ${email}`);
   } catch (error) {
-    console.error("Permit role assignment error:", error);
+    console.error(`Failed to assign ${role} role to ${email}:`, error);
     throw error;
   }
 };
+// export const assignRoleWithPermit = async (email: string, role: 'editor' | 'viewer') => {
+//   try {
+//     // First check if user exists as a fallback
+//     const userExists = await checkUserExistsInPermit(email);
+//     if (!userExists) {
+//       console.log(`User ${email} not found, attempting to sync first...`);
+//       await syncUserWithPermit(email, role);
+//       await new Promise(resolve => setTimeout(resolve, 3000));
+//     }
+
+//     // Assign the role
+//     await permit.api.roleAssignments.assign({
+//       user: email,
+//       role,
+//       tenant: "default",
+//       resource: "Document"
+//     });
+    
+//     console.log(`Successfully assigned ${role} role to ${email}`);
+//   } catch (error) {
+//     console.error(`Failed to assign ${role} role to ${email}:`, error);
+//     throw error;
+//   }
+// };
+// `${PERMIT_API_BASE}/${PERMIT_PROJ_ID}/${PERMIT_ENV_ID}/users/${userId}/roles
 
 export const unassignRoleWithPermit = async (email: string, role: 'editor' | 'viewer') => {
   try {
