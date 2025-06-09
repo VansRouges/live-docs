@@ -22,12 +22,55 @@ import { updateDocumentAccess } from "@/lib/actions/room.actions";
 
 const ShareModal = ({ roomId, collaborators, creatorId, currentUserType }: ShareDocumentDialogProps) => {
   const user = useSelf();
-
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [assigningRole, setAssigningRole] = useState(false);
   const [email, setEmail] = useState('');
-  const [userType, setUserType] = useState<UserType>('viewer');
+  const [userType, setUserType] = useState<UserType | "">('select');
+
+  const assignRole = async () => {
+    if (!email) {
+      console.error('Email is required to assign a role');
+      // toast.error('Please enter an email address first');
+      return;
+    }
+    
+    try {
+      setAssigningRole(true);
+      const response = await fetch('/api/permit/role-assign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: email,
+          role: userType
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to assign role');
+      }
+
+      // toast.success(`Role assigned successfully`);
+    } catch (error) {
+      console.error('Error assigning role:', error);
+      // toast.error('Failed to assign role');
+    } finally {
+      setAssigningRole(false);
+    }
+  };
+
+  const handleUserTypeChange = (type: UserType) => {
+    if (!email) {
+      console.error('Cannot select role without email');
+      // toast.error('Please enter an email address first');
+      return;
+    }
+    setUserType(type);
+    assignRole();
+  };
+
 
   const shareDocumentHandler = async () => {
     setLoading(true);

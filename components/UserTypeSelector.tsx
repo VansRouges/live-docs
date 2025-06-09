@@ -13,11 +13,12 @@ const UserTypeSelector = ({ userType, setUserType, onClickHandler }: UserTypeSel
   }
 
   return (
-    <Select value={userType} onValueChange={(type: UserType) => accessChangeHandler(type)}>
+    <Select value={userType || ''} onValueChange={(type: UserType) => setUserType(type)}>
       <SelectTrigger className="shad-select">
-        <SelectValue />
+        <SelectValue placeholder="Select access" />
       </SelectTrigger>
       <SelectContent className="border-none bg-dark-200">
+        <SelectItem value="viewer" className="shad-select-item">select</SelectItem>
         <SelectItem value="viewer" className="shad-select-item">can view</SelectItem>
         <SelectItem value="editor" className="shad-select-item">can edit</SelectItem>
       </SelectContent>
