@@ -28,7 +28,7 @@ export const checkUserExistsInPermit = async (email: string): Promise<boolean> =
     userExistenceCache.set(email, true);
     return true;
   } catch (error) {
-    if (error.status === 404) {
+    if (typeof error === "object" && error !== null && "status" in error && (error as any).status === 404) {
       userExistenceCache.set(email, false);
       return false;
     }

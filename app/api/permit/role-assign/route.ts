@@ -33,7 +33,6 @@ export async function POST(request: Request) {
       user: userId,
       role,
       tenant: "default",
-      // resource: "Document"
     });
 
     return NextResponse.json({
@@ -43,13 +42,13 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to assign role in Permit.io:", error);
     
-    // Handle user not found case
-    if (error.status === 404) {
+    // Handle role not assigned case
+    if (typeof error === "object" && error !== null && "status" in error && (error as any).status === 404) {
       return NextResponse.json(
         { 
           success: false, 
-          message: "User not found in Permit.io",
-          error: error.message 
+          message: "Role not assigned to user",
+          error: (error as any).message 
         },
         { status: 404 }
       );
@@ -59,9 +58,9 @@ export async function POST(request: Request) {
       { 
         success: false, 
         message: "Failed to assign role in Permit.io",
-        error: error.message 
+        error: typeof error === "object" && error !== null && "message" in error ? (error as any).message : String(error)
       },
-      { status: error.status || 500 }
+      { status: typeof error === "object" && error !== null && "status" in error ? (error as any).status : 500 }
     );
   }
 }

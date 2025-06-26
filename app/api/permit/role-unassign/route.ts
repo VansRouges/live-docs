@@ -24,7 +24,6 @@ export async function DELETE(request: Request) {
       user: userId,
       role,
       tenant: "default",
-      // resource: "Document"
     });
 
     return NextResponse.json({
@@ -35,12 +34,12 @@ export async function DELETE(request: Request) {
     console.error("Failed to unassign role in Permit.io:", error);
     
     // Handle role not assigned case
-    if (error.status === 404) {
+    if (typeof error === "object" && error !== null && "status" in error && (error as any).status === 404) {
       return NextResponse.json(
         { 
           success: false, 
           message: "Role not assigned to user",
-          error: error.message 
+          error: (error as any).message 
         },
         { status: 404 }
       );
@@ -50,9 +49,9 @@ export async function DELETE(request: Request) {
       { 
         success: false, 
         message: "Failed to unassign role in Permit.io",
-        error: error.message 
+        error: typeof error === "object" && error !== null && "message" in error ? (error as any).message : String(error)
       },
-      { status: error.status || 500 }
+      { status: typeof error === "object" && error !== null && "status" in error ? (error as any).status : 500 }
     );
   }
 }

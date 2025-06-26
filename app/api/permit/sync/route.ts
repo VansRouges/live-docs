@@ -1,12 +1,12 @@
-import axios from 'axios';
+import { Permit } from 'permitio';
 import { NextResponse } from 'next/server';
 
-const PERMIT_API_URL = "https://api.permit.io/v2/facts/3e4b77901d8f4fd1a51109f8ed04f615/bf4959f547c74a1c8bff519b20a9174b/users";
 const PERMIT_API_KEY = process.env.PERMIT_API_KEY as string;
-const PERMIT_AUTH_HEADER = {
-  Authorization: `Bearer ${PERMIT_API_KEY}`,
-  "Content-Type": "application/json",
-};
+
+const permit = new Permit({
+  token: PERMIT_API_KEY,
+  pdp: 'https://cloudpdp.api.permit.io',
+});
 
 const allowedRoles: string[] = ['editor', 'viewer'];
 
@@ -27,79 +27,32 @@ export async function POST(request: Request) {
     );
   }
 
-  const permitPayload = {
-    key: email,
-    email,
-    role_assignments: [{ role, tenant: "default" }],
-  };
-
   try {
-    // First check if user exists
-    try {
-      await axios.get(`${PERMIT_API_URL}/${email}`, { headers: PERMIT_AUTH_HEADER });
-      
-      // User exists - call role-assign endpoint on same domain
-      try {
-        const requestUrl = new URL(request.url);
-        const roleAssignUrl = `${requestUrl.origin}/api/permit/role-assign`;
-        
-        const roleAssignResponse = await axios.post(
-          roleAssignUrl,
-          {
-            userId: email,
-            role
-          }
-        );
-
-        return NextResponse.json({
-          message: "Role assigned to existing user successfully",
-          data: roleAssignResponse.data,
-        }, { status: 200 });
-        
-      } catch (roleAssignError) {
-        console.error("Failed to assign role to existing user:", roleAssignError);
-        return NextResponse.json(
-          { 
-            success: false, 
-            message: "User exists but failed to assign role",
-            error: axios.isAxiosError(roleAssignError) ? roleAssignError.response?.data : roleAssignError 
-          },
-          { status: 500 }
-        );
-      }
-
-    } catch (getError) {
-      // User doesn't exist - proceed with creation
-      if (!axios.isAxiosError(getError) || getError.response?.status !== 404) {
-        throw getError; // Re-throw if it's not a 404 error
-      }
-
-      // Create new user
-      const response = await axios.post(PERMIT_API_URL, permitPayload, { headers: PERMIT_AUTH_HEADER });
-      const permitResponse = response.data;
+    // First check if user exists using SDK
+     // Create new user and assign role in one operation
+      await permit.api.users.sync({
+        key: email,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        role_assignments: [{ role, tenant: "default" }]
+      });
 
       return NextResponse.json({
-        message: "User created successfully",
-        permit: permitResponse,
+        message: "User created and role assigned successfully",
+        data: { email, role }
       }, { status: 201 });
-    }
+      
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error("Failed to sync user to Permit.io:", error.response?.data || error.message);
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: "Failed to sync with Permit.io",
-          error: error.response?.data 
-        },
-        { status: error.response?.status || 500 }
-      );
-    } else {
-      console.error("Failed to sync user to Permit.io:", error);
-      return NextResponse.json(
-        { success: false, message: "Failed to sync with Permit.io" },
-        { status: 500 }
-      );
-    }
+    console.error("Failed to sync user to Permit.io:", error);
+    
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: "Failed to sync with Permit.io",
+        error: typeof error === "object" && error !== null && "message" in error ? (error as any).message : String(error)
+      },
+      { status: typeof error === "object" && error !== null && "status" in error ? (error as any).status : 500 }
+    );
   }
 }
